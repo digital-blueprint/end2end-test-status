@@ -114,7 +114,23 @@
         "nixpkgs": "nixpkgs",
         "pre-commit-hooks": [
           "git-hooks"
-        ]
+        ],
+        "shared": "shared"
+      }
+    },
+    "shared": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1769424022,
+        "owner": "digital-blueprint",
+        "repo": "shared",
+        "rev": "e969b7143950692419ceee8b41f04f023a80233e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "digital-blueprint",
+        "repo": "shared",
+        "type": "github"
       }
     }
   },
