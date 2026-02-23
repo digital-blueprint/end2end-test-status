@@ -1,0 +1,22 @@
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Database
+*.sqlite
+*.db
+/data/
+
+# Go binary
+e2e-status
