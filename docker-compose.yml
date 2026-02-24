@@ -1,0 +1,17 @@
+services:
+  e2e-status:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # PATH_PREFIX: /end2end-test-status
+        VITE_FOOTER_TEXT: QA dashboard
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      API_TOKEN: dev-token
+      # PATH_PREFIX: /end2end-test-status
+      VITE_FOOTER_TEXT: QA dashboard
+    restart: unless-stopped
