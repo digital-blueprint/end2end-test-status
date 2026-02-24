@@ -115,7 +115,7 @@ func normalizePathPrefix(raw string) string {
 	return strings.TrimSuffix(raw, "/")
 }
 
-func serveIndexHTML(w http.ResponseWriter, distFS fs.FS, pathPrefix string) {
+func serveIndexHTML(w http.ResponseWriter, distFS fs.FS, pathPrefix string, footerText string) {
 	data, err := fs.ReadFile(distFS, "index.html")
 	if err != nil {
 		http.Error(w, "index not found", http.StatusNotFound)
@@ -123,11 +123,18 @@ func serveIndexHTML(w http.ResponseWriter, distFS fs.FS, pathPrefix string) {
 	}
 
 	html := string(data)
+	scriptParts := []string{}
 	if pathPrefix != "" {
 		html = strings.ReplaceAll(html, "href=\"/assets/", "href=\""+pathPrefix+"/assets/")
 		html = strings.ReplaceAll(html, "src=\"/assets/", "src=\""+pathPrefix+"/assets/")
 		html = strings.ReplaceAll(html, "href=\"/favicon.svg\"", "href=\""+pathPrefix+"/favicon.svg\"")
-		script := "<script>window.__PATH_PREFIX__=" + strconv.Quote(pathPrefix) + ";</script>"
+		scriptParts = append(scriptParts, "window.__PATH_PREFIX__="+strconv.Quote(pathPrefix))
+	}
+	if strings.TrimSpace(footerText) != "" {
+		scriptParts = append(scriptParts, "window.__FOOTER_TEXT__="+strconv.Quote(footerText))
+	}
+	if len(scriptParts) > 0 {
+		script := "<script>" + strings.Join(scriptParts, ";") + ";</script>"
 		html = strings.Replace(html, "</head>", script+"</head>", 1)
 	}
 
@@ -332,6 +339,7 @@ func main() {
 	initDB()
 
 	pathPrefix := normalizePathPrefix(os.Getenv("PATH_PREFIX"))
+	footerText := os.Getenv("FOOTER_TEXT")
 
 	r := mux.NewRouter()
 	appRouter := r
@@ -365,12 +373,12 @@ func main() {
 		}
 		path := strings.TrimPrefix(requestPath, "/")
 		if path == "" {
-			serveIndexHTML(w, distFS, pathPrefix)
+			serveIndexHTML(w, distFS, pathPrefix, footerText)
 			return
 		}
 		if _, err := fs.Stat(distFS, path); err != nil {
 			// File not found - serve index.html for SPA
-			serveIndexHTML(w, distFS, pathPrefix)
+			serveIndexHTML(w, distFS, pathPrefix, footerText)
 			return
 		}
 		req.URL.Path = requestPath

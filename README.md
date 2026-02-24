@@ -18,7 +18,7 @@ docker run -d \
   -v /path/to/data:/data \
   -e API_TOKEN=your-secret-token \
   -e PATH_PREFIX=/end2end-test-status \
-  -e VITE_FOOTER_TEXT="QA dashboard" \
+  -e FOOTER_TEXT="QA dashboard" \
   ghcr.io/digital-blueprint/end2end-test-status
 ```
 
@@ -37,18 +37,18 @@ services:
     environment:
       API_TOKEN: your-secret-token
       PATH_PREFIX: /end2end-test-status
-      VITE_FOOTER_TEXT: QA dashboard
+      FOOTER_TEXT: QA dashboard
     restart: unless-stopped
 ```
 
 ## Environment variables
 
-| Variable           | Default  | Description                                                                                                                    |
-| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `API_TOKEN`        | _(none)_ | Bearer token required on `POST /webhook`. If unset, the webhook accepts all requests.                                          |
-| `PORT`             | `8080`   | Port the HTTP server listens on.                                                                                               |
-| `PATH_PREFIX`      | _(none)_ | Optional URL path prefix for hosting under a sub-path (e.g. `/end2end-test-status`). Used by the Go server and the Vite build. |
-| `VITE_FOOTER_TEXT` | _(none)_ | Optional footer text shown in the UI.                                                                                          |
+| Variable      | Default  | Description                                                                                                                    |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `API_TOKEN`   | _(none)_ | Bearer token required on `POST /webhook`. If unset, the webhook accepts all requests.                                          |
+| `PORT`        | `8080`   | Port the HTTP server listens on.                                                                                               |
+| `PATH_PREFIX` | _(none)_ | Optional URL path prefix for hosting under a sub-path (e.g. `/end2end-test-status`). Used by the Go server and the Vite build. |
+| `FOOTER_TEXT` | _(none)_ | Optional footer text shown in the UI.                                                                                          |
 
 The SQLite database is stored at `/data/db.sqlite`. Mount `/data` as a persistent volume.
 
@@ -137,10 +137,7 @@ PATH_PREFIX=/end2end-test-status npm run build
 ```sh
 docker build --build-arg PATH_PREFIX=/end2end-test-status -t ghcr.io/digital-blueprint/end2end-test-status:latest .
 
-# with footer text
-docker build --build-arg PATH_PREFIX=/end2end-test-status \
-  --build-arg VITE_FOOTER_TEXT="QA dashboard" \
-  -t ghcr.io/digital-blueprint/end2end-test-status:latest .
+# Footer text is set at runtime via FOOTER_TEXT, so the published image can be reused.
 ```
 
 This writes to `frontend/dist/`, which is embedded into the Go binary at compile time via `//go:embed`.

@@ -24,11 +24,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { footerText } from './types'
 
 type Theme = 'light' | 'dark'
 
 const theme = ref<Theme>((document.documentElement.dataset.theme as Theme) || 'dark')
-const footerText = import.meta.env.VITE_FOOTER_TEXT as string | undefined
 
 const applyTheme = (nextTheme: Theme) => {
   theme.value = nextTheme

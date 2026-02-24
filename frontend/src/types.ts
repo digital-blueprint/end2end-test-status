@@ -31,7 +31,11 @@ const fromWindow = typeof window !== 'undefined'
   : undefined
 
 const pathPrefix = normalizePathPrefix(fromWindow ?? import.meta.env.VITE_PATH_PREFIX)
-export { pathPrefix }
+const footerText = typeof window !== 'undefined'
+  ? (window as Window & { __FOOTER_TEXT__?: string }).__FOOTER_TEXT__
+  : undefined
+
+export { footerText, pathPrefix }
 
 export function statusClass(status: string): string {
   if (status === 'success') return 'success'
