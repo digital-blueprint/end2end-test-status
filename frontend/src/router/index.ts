@@ -10,7 +10,11 @@ const normalizePathPrefix = (value: string | undefined) => {
   return withSlash.replace(/\/$/, '')
 }
 
-const base = normalizePathPrefix(import.meta.env.VITE_PATH_PREFIX)
+const fromWindow = typeof window !== 'undefined'
+  ? (window as Window & { __PATH_PREFIX__?: string }).__PATH_PREFIX__
+  : undefined
+
+const base = normalizePathPrefix(fromWindow ?? import.meta.env.VITE_PATH_PREFIX)
 
 export default createRouter({
   history: createWebHistory(base || undefined),

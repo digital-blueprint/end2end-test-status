@@ -3,6 +3,9 @@
 
   <div v-if="loading" class="loading">Loading projects...</div>
   <div v-else-if="error" class="loading">{{ error }}</div>
+  <div v-else-if="projects.length === 0" class="loading">
+    No projects yet. Send a webhook to get started.
+  </div>
   <template v-else>
     <div class="stats">
       <div class="stat-box">
@@ -19,8 +22,7 @@
       </div>
     </div>
 
-    <div v-if="projects.length === 0" class="loading">No projects yet. Send a webhook to get started.</div>
-    <div v-else class="grid">
+    <div class="grid">
       <RouterLink
         v-for="p in projects"
         :key="p.project"
