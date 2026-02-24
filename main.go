@@ -43,12 +43,12 @@ type TestResult struct {
 }
 
 type ProjectSummary struct {
-	Project        string `json:"project"`
-	LatestStatus   string `json:"latest_status"`
-	TotalRuns      int    `json:"total_runs"`
-	PassedRuns     int    `json:"passed_runs"`
-	FailedRuns     int    `json:"failed_runs"`
-	LastRun        string `json:"last_run"`
+	Project      string `json:"project"`
+	LatestStatus string `json:"latest_status"`
+	TotalRuns    int    `json:"total_runs"`
+	PassedRuns   int    `json:"passed_runs"`
+	FailedRuns   int    `json:"failed_runs"`
+	LastRun      string `json:"last_run"`
 }
 
 var db *sql.DB
@@ -86,10 +86,10 @@ func initDB() {
 	}
 }
 
-func authMiddleware(next http.Handler) http.Handler {
+func authMiddleware(pathPrefix string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only protect the webhook endpoint
-		if r.URL.Path == "/webhook" {
+		if r.URL.Path == pathPrefix+"/webhook" {
 			token := os.Getenv("API_TOKEN")
 			if token != "" {
 				authHeader := r.Header.Get("Authorization")
@@ -101,6 +101,17 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func normalizePathPrefix(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || raw == "/" {
+		return ""
+	}
+	if !strings.HasPrefix(raw, "/") {
+		raw = "/" + raw
+	}
+	return strings.TrimSuffix(raw, "/")
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
@@ -299,17 +310,23 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	initDB()
 
+	pathPrefix := normalizePathPrefix(os.Getenv("PATH_PREFIX"))
+
 	r := mux.NewRouter()
+	appRouter := r
+	if pathPrefix != "" {
+		appRouter = r.PathPrefix(pathPrefix).Subrouter()
+	}
 
 	// API routes
-	api := r.PathPrefix("/api").Subrouter()
+	api := appRouter.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/projects", projectsHandler).Methods("GET")
 	api.HandleFunc("/projects/{project}/results", projectResultsHandler).Methods("GET")
 	api.HandleFunc("/results", allResultsHandler).Methods("GET")
 	api.HandleFunc("/health", healthHandler).Methods("GET")
 
 	// Webhook
-	r.HandleFunc("/webhook", webhookHandler).Methods("POST")
+	appRouter.HandleFunc("/webhook", webhookHandler).Methods("POST")
 
 	// Serve Vue SPA - strip the "frontend/dist" prefix from the embedded FS
 	distFS, err := fs.Sub(frontendFS, "frontend/dist")
@@ -319,20 +336,26 @@ func main() {
 	fileServer := http.FileServer(http.FS(distFS))
 
 	// All other routes serve the SPA (Vue Router handles client-side routing)
-	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	appRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// Try to serve file; if not found, serve index.html for SPA routing
-		path := strings.TrimPrefix(req.URL.Path, "/")
+		requestPath := req.URL.Path
+		if pathPrefix != "" {
+			requestPath = strings.TrimPrefix(requestPath, pathPrefix)
+		}
+		path := strings.TrimPrefix(requestPath, "/")
 		if path == "" {
 			path = "index.html"
 		}
 		if _, err := fs.Stat(distFS, path); err != nil {
 			// File not found - serve index.html for SPA
 			req.URL.Path = "/"
+		} else {
+			req.URL.Path = requestPath
 		}
 		fileServer.ServeHTTP(w, req)
 	})
 
-	handler := authMiddleware(r)
+	handler := authMiddleware(pathPrefix, r)
 
 	port := os.Getenv("PORT")
 	if port == "" {

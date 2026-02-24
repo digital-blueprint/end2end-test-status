@@ -19,6 +19,16 @@ export interface TestResult {
   created_at: string
 }
 
+const normalizePathPrefix = (value: string | undefined): string => {
+  const trimmed = (value ?? '').trim()
+  if (trimmed === '' || trimmed === '/') return ''
+  const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  return withSlash.replace(/\/$/, '')
+}
+
+const pathPrefix = normalizePathPrefix(import.meta.env.VITE_PATH_PREFIX)
+export { pathPrefix }
+
 export function statusClass(status: string): string {
   if (status === 'success') return 'success'
   if (status === 'failed') return 'failed'
@@ -34,7 +44,8 @@ export function formatDate(dt: string): string {
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {
-  const res = await fetch(url)
+  const normalizedUrl = url.startsWith('/') && pathPrefix ? `${pathPrefix}${url}` : url
+  const res = await fetch(normalizedUrl)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json() as Promise<T>
 }
