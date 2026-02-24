@@ -30,7 +30,7 @@
         class="card"
       >
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
-          <div style="font-weight:600;font-size:0.95rem;color:#f8fafc;word-break:break-word">{{ p.project }}</div>
+          <div style="font-weight:600;font-size:0.95rem;color:var(--heading);word-break:break-word">{{ p.project }}</div>
           <span class="badge" :class="statusClass(p.latest_status)">{{ p.latest_status }}</span>
         </div>
         <div style="margin-top:0.75rem;display:flex;gap:1.25rem;font-size:0.8rem;color:#64748b">
