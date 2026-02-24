@@ -26,7 +26,11 @@ const normalizePathPrefix = (value: string | undefined): string => {
   return withSlash.replace(/\/$/, '')
 }
 
-const pathPrefix = normalizePathPrefix(import.meta.env.VITE_PATH_PREFIX)
+const fromWindow = typeof window !== 'undefined'
+  ? (window as Window & { __PATH_PREFIX__?: string }).__PATH_PREFIX__
+  : undefined
+
+const pathPrefix = normalizePathPrefix(fromWindow ?? import.meta.env.VITE_PATH_PREFIX)
 export { pathPrefix }
 
 export function statusClass(status: string): string {

@@ -4,6 +4,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
 COPY frontend/ ./
+ARG PATH_PREFIX
+ENV PATH_PREFIX=${PATH_PREFIX}
 RUN npm run build
 
 # ---- Build Go binary ----

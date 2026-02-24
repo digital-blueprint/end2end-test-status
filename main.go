@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -112,6 +113,26 @@ func normalizePathPrefix(raw string) string {
 		raw = "/" + raw
 	}
 	return strings.TrimSuffix(raw, "/")
+}
+
+func serveIndexHTML(w http.ResponseWriter, distFS fs.FS, pathPrefix string) {
+	data, err := fs.ReadFile(distFS, "index.html")
+	if err != nil {
+		http.Error(w, "index not found", http.StatusNotFound)
+		return
+	}
+
+	html := string(data)
+	if pathPrefix != "" {
+		html = strings.ReplaceAll(html, "href=\"/assets/", "href=\""+pathPrefix+"/assets/")
+		html = strings.ReplaceAll(html, "src=\"/assets/", "src=\""+pathPrefix+"/assets/")
+		html = strings.ReplaceAll(html, "href=\"/favicon.svg\"", "href=\""+pathPrefix+"/favicon.svg\"")
+		script := "<script>window.__PATH_PREFIX__=" + strconv.Quote(pathPrefix) + ";</script>"
+		html = strings.Replace(html, "</head>", script+"</head>", 1)
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
@@ -344,14 +365,15 @@ func main() {
 		}
 		path := strings.TrimPrefix(requestPath, "/")
 		if path == "" {
-			path = "index.html"
+			serveIndexHTML(w, distFS, pathPrefix)
+			return
 		}
 		if _, err := fs.Stat(distFS, path); err != nil {
 			// File not found - serve index.html for SPA
-			req.URL.Path = "/"
-		} else {
-			req.URL.Path = requestPath
+			serveIndexHTML(w, distFS, pathPrefix)
+			return
 		}
+		req.URL.Path = requestPath
 		fileServer.ServeHTTP(w, req)
 	})
 

@@ -129,6 +129,12 @@ cd frontend
 PATH_PREFIX=/end2end-test-status npm run build
 ```
 
+### Build Docker image with prefixed assets
+
+```sh
+docker build --build-arg PATH_PREFIX=/end2end-test-status -t ghcr.io/digital-blueprint/end2end-test-status:latest .
+```
+
 This writes to `frontend/dist/`, which is embedded into the Go binary at compile time via `//go:embed`.
 
 ## CI / Docker image
