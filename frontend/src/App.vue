@@ -16,6 +16,9 @@
   <main>
     <RouterView />
   </main>
+  <footer v-if="footerText" class="app-footer">
+    <span>{{ footerText }}</span>
+  </footer>
 </template>
 
 <script setup lang="ts">
@@ -25,6 +28,7 @@ import { RouterLink, RouterView } from 'vue-router'
 type Theme = 'light' | 'dark'
 
 const theme = ref<Theme>((document.documentElement.dataset.theme as Theme) || 'dark')
+const footerText = import.meta.env.VITE_FOOTER_TEXT as string | undefined
 
 const applyTheme = (nextTheme: Theme) => {
   theme.value = nextTheme

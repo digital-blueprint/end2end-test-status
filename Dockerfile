@@ -6,6 +6,8 @@ RUN npm ci
 COPY frontend/ ./
 ARG PATH_PREFIX
 ENV PATH_PREFIX=${PATH_PREFIX}
+ARG VITE_FOOTER_TEXT
+ENV VITE_FOOTER_TEXT=${VITE_FOOTER_TEXT}
 RUN npm run build
 
 # ---- Build Go binary ----
