@@ -21,7 +21,7 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o e2e-status .
 
 # ---- Final image ----
-FROM alpine:3.21
+FROM alpine:3.23
 RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=go-builder /app/e2e-status .
