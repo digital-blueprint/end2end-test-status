@@ -9,7 +9,7 @@ ENV PATH_PREFIX=${PATH_PREFIX}
 RUN npm run build
 
 # ---- Build Go binary ----
-FROM golang:1.25-alpine AS go-builder
+FROM golang:1.26-alpine AS go-builder
 # CGO is required for go-sqlite3
 RUN apk add --no-cache gcc musl-dev
 WORKDIR /app
