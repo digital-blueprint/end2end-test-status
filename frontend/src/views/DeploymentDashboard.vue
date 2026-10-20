@@ -21,11 +21,8 @@
         <dl class="deployment-environments">
           <div v-for="deployment in project.environments" :key="deployment.environment" class="deployment-environment">
             <dt class="environment-name">
-              <div class="environment-heading">
-                <RouterLink :to="{ path: `/deployments/project/${encodeURIComponent(project.project)}`, query: { environment: deployment.environment } }"
-                  class="deployment-environment-link">{{ deployment.environment }}</RouterLink>
-                <EnvironmentActions :project="project.project" :environment="deployment.environment" :deployment-url="deployment.deployment_url" />
-              </div>
+              <RouterLink :to="{ path: `/deployments/project/${encodeURIComponent(project.project)}`, query: { environment: deployment.environment } }"
+                class="deployment-environment-link">{{ deployment.environment }}</RouterLink>
             </dt>
             <dd>
               <VersionLink v-if="deployment.version || deployment.version_created_at" :deployment="deployment" fallback="Version"
@@ -33,6 +30,9 @@
               <RouterLink :to="`/deployments/project/${encodeURIComponent(project.project)}`" class="deployment-summary-link">
                 <span class="deployment-deployed-date">Deployed <RelativeDate :value="deployment.deployed_at" /></span>
               </RouterLink>
+            </dd>
+            <dd v-if="deployment.deployment_url" class="deployment-environment-actions">
+              <EnvironmentActions :project="project.project" :environment="deployment.environment" :deployment-url="deployment.deployment_url" />
             </dd>
           </div>
         </dl>

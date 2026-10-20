@@ -140,7 +140,7 @@ Fetch tags and sufficient history in CI for tag-based version labels; `--always`
 
 ### Dashboard
 
-Deployment projects are independent of E2E test projects and appear after their first report. **Overview** shows each project's deployed environments, newest first; **All Deployments** shows paginated history across projects. Project cards open project history, and environment names or **See deployments** open history filtered to that environment. Filters persist in the URL. **Open environment** opens the current environment URL, not a historical deployment.
+Deployment projects are independent of E2E test projects and appear after their first report. **Overview** shows each project's deployed environments, newest first; **All Deployments** shows paginated history across projects. Project cards open project history, and environment names open history filtered to that environment. Filters persist in the URL. **Open environment** opens the current environment URL, not a historical deployment.
 
 Versions link to their Git URLs and optionally show their creation age, e.g. `v1.2.3 (created 3 days ago)`. Dates update every 30 seconds; hover for exact local timestamps. Version tooltips also show the age at deployment, e.g. “Deployed 7 days after creation”.
 
