@@ -43,14 +43,15 @@ services:
 
 ## Environment variables
 
-| Variable      | Default  | Description                                                                                                                    |
-| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `API_TOKEN`   | _(none)_ | Bearer token required on both webhook endpoints. If unset, the webhooks accept all requests.                                  |
-| `PORT`        | `8080`   | Port the HTTP server listens on.                                                                                               |
-| `PATH_PREFIX` | _(none)_ | Optional URL path prefix for hosting under a sub-path (e.g. `/end2end-test-status`). Used by the Go server and the Vite build. |
-| `FOOTER_TEXT` | _(none)_ | Optional footer text shown in the UI.                                                                                          |
+| Variable      | Default           | Description                                                                                                                    |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `API_TOKEN`   | _(none)_          | Bearer token required on both webhook endpoints. If unset, the webhooks accept all requests.                                   |
+| `PORT`        | `8080`            | Port the HTTP server listens on.                                                                                               |
+| `PATH_PREFIX` | _(none)_          | Optional URL path prefix for hosting under a sub-path (e.g. `/end2end-test-status`). Used by the Go server and the Vite build. |
+| `FOOTER_TEXT` | _(none)_          | Optional footer text shown in the UI.                                                                                          |
+| `DB_PATH`     | `/data/db.sqlite` | Path to the SQLite database file. The parent directory is created if missing.                                                  |
 
-The SQLite database is stored at `/data/db.sqlite`. Mount `/data` as a persistent volume.
+By default the SQLite database is stored at `/data/db.sqlite`. Mount `/data` as a persistent volume.
 
 ## Webhook
 
@@ -104,15 +105,15 @@ curl --fail-with-body -X POST "https://your-host/webhook/deployments" \
   }'
 ```
 
-| Field | Required | Description |
-| ----- | -------- | ----------- |
-| `project` | yes | Deployment project name, independent of the E2E test project list |
-| `git_url` | yes | HTTP(S) Git URL without embedded credentials; a commit-specific link is recommended |
-| `environment` | yes | Freeform, case-sensitive name, e.g. `dev`, `demo`, `staging`, `prod`, or `preview/42` |
-| `deployed_at` | no | When the deployment happened, not when the report was received; defaults to the server's current time |
-| `version` | no | Freeform version label, e.g. `v1.2.3`, `v1.2.3-4-gabc123`, or a commit hash |
-| `version_created_at` | no | When the deployed version, tag, or revision was created; independent of `deployed_at` |
-| `deployment_url` | no | HTTP(S) URL of the running deployment, without embedded credentials |
+| Field                | Required | Description                                                                                           |
+| -------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `project`            | yes      | Deployment project name, independent of the E2E test project list                                     |
+| `git_url`            | yes      | HTTP(S) Git URL without embedded credentials; a commit-specific link is recommended                   |
+| `environment`        | yes      | Freeform, case-sensitive name, e.g. `dev`, `demo`, `staging`, `prod`, or `preview/42`                 |
+| `deployed_at`        | no       | When the deployment happened, not when the report was received; defaults to the server's current time |
+| `version`            | no       | Freeform version label, e.g. `v1.2.3`, `v1.2.3-4-gabc123`, or a commit hash                           |
+| `version_created_at` | no       | When the deployed version, tag, or revision was created; independent of `deployed_at`                 |
+| `deployment_url`     | no       | HTTP(S) URL of the running deployment, without embedded credentials                                   |
 
 Both timestamps must use RFC3339 with a timezone, such as `2026-10-20T12:30:00Z`, and are stored in UTC. Project, environment, URL, and version values are trimmed. Each accepted report returns `201 Created` and adds a history entry; retries are not deduplicated. The latest deployment is selected by `deployed_at`, with insertion order breaking ties, so delayed reports do not replace newer deployments.
 
@@ -149,13 +150,13 @@ Deployment tables and optional fields are created or migrated automatically in t
 
 All API endpoints return JSON and are public. Include `PATH_PREFIX` in their URLs if configured.
 
-| Method | Path                              | Description                                          |
-| ------ | --------------------------------- | ---------------------------------------------------- |
-| `GET`  | `/api/projects`                   | All projects with pass/fail counts and latest status |
-| `GET`  | `/api/projects/{project}/results` | Results for a single project                         |
-| `GET`  | `/api/results`                    | All results across all projects                      |
-| `GET`  | `/api/health`                     | Health check                                         |
-| `GET`  | `/api/deployments/projects`       | Projects with latest deployments per environment |
+| Method | Path                              | Description                                                  |
+| ------ | --------------------------------- | ------------------------------------------------------------ |
+| `GET`  | `/api/projects`                   | All projects with pass/fail counts and latest status         |
+| `GET`  | `/api/projects/{project}/results` | Results for a single project                                 |
+| `GET`  | `/api/results`                    | All results across all projects                              |
+| `GET`  | `/api/health`                     | Health check                                                 |
+| `GET`  | `/api/deployments/projects`       | Projects with latest deployments per environment             |
 | `GET`  | `/api/deployments`                | Paginated deployment history, optionally filtered by project |
 
 ### Deployment endpoints
@@ -164,12 +165,12 @@ All API endpoints return JSON and are public. Include `PATH_PREFIX` in their URL
 
 `GET /api/deployments` returns `{ "deployments": [...], "total": 123, "environments": ["staging"] }`, newest first. Records contain `id` and the deployment payload fields; omitted optional fields are empty strings. `total` counts matching records before pagination. `environments` lists all environments for the selected project, or all reported environments when no project is selected, regardless of pagination or environment filtering.
 
-| Parameter | Description |
-| --------- | ----------- |
-| `project` | Optional, exact project name (omit for all projects; an explicitly empty value is invalid) |
-| `environment` | Optional, exact environment name |
-| `limit` | Page size, 1–200 (default 50) |
-| `offset` | Non-negative number of records to skip (default 0) |
+| Parameter     | Description                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `project`     | Optional, exact project name (omit for all projects; an explicitly empty value is invalid) |
+| `environment` | Optional, exact environment name                                                           |
+| `limit`       | Page size, 1–200 (default 50)                                                              |
+| `offset`      | Non-negative number of records to skip (default 0)                                         |
 
 URL-encode project and environment query values.
 

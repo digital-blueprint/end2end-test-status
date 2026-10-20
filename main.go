@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +20,7 @@ import (
 //go:embed frontend/dist
 var frontendFS embed.FS
 
-const dbPath = "/data/db.sqlite"
+const defaultDBPath = "/data/db.sqlite"
 
 type WebhookPayload struct {
 	Project    string `json:"project"`
@@ -55,9 +56,13 @@ type ProjectSummary struct {
 var db *sql.DB
 
 func initDB() {
-	// Ensure /data directory exists
-	if err := os.MkdirAll("/data", 0755); err != nil {
-		log.Fatalf("failed to create /data directory: %v", err)
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = defaultDBPath
+	}
+
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+		log.Fatalf("failed to create database directory: %v", err)
 	}
 
 	var err error
