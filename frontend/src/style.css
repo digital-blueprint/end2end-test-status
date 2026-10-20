@@ -288,7 +288,7 @@ a.ext:hover { text-decoration: underline; }
 .environment-name { text-transform: none; overflow-wrap: anywhere; }
 .project-name { overflow-wrap: anywhere; }
 .deployment-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); }
-.deployment-card { display: block; min-width: 0; position: relative; }
+.deployment-card { display: flex; flex-direction: column; min-width: 0; position: relative; }
 .deployment-project-link::after { content: ''; position: absolute; inset: 0; border-radius: 0.75rem; }
 .deployment-project-link:focus-visible { outline: none; }
 .deployment-project-link:focus-visible::after { outline: 2px solid var(--nav-accent); outline-offset: 3px; }
@@ -300,12 +300,13 @@ a.ext:hover { text-decoration: underline; }
 .deployment-action-button:focus-visible { outline: 2px solid var(--nav-accent); outline-offset: 2px; }
 .deployment-action-button:disabled { opacity: 0.5; cursor: default; }
 .deployment-action-button:disabled:hover { color: var(--text); border-color: var(--input-border); }
-.deployment-compare { position: relative; z-index: 1; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--card-border); }
-.deployment-compare-controls { gap: 0.5rem; margin-bottom: 0.35rem; }
-.deployment-compare-controls select { min-width: 0; max-width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+.deployment-compare { position: relative; z-index: 1; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--card-border); }
+.deployment-compare-controls { flex-wrap: nowrap; gap: 0.5rem; margin-bottom: 0.35rem; }
+.deployment-compare-controls select { flex: 1 1 0; width: 0; min-width: 0; max-width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+.deployment-compare-controls .deployment-action-button { flex-shrink: 0; }
 .deployment-compare-hint { color: var(--muted); font-size: 0.75rem; overflow-wrap: anywhere; }
 .deployment-project-name { font-size: 0.95rem; margin-bottom: 0.75rem; overflow-wrap: anywhere; }
-.deployment-environments { font-size: 0.8rem; }
+.deployment-environments { font-size: 0.8rem; margin-bottom: 0.75rem; }
 .deployment-environment { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.5rem 0; }
 .deployment-environment + .deployment-environment { border-top: 1px solid var(--card-border); }
 .deployment-environment dt { font-weight: 500; min-width: 0; }
