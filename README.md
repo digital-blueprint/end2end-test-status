@@ -144,6 +144,8 @@ Deployment projects are independent of E2E test projects and appear after their 
 
 Versions link to their Git URLs and optionally show their creation age, e.g. `v1.2.3 (created 3 days ago)`. Dates update every 30 seconds; hover for exact local timestamps. Version tooltips also show the age at deployment, e.g. “Deployed 7 days after creation”.
 
+Projects with multiple environments have two selectors on the deployment overview, defaulting to the last displayed environment on the left and the first on the right. **⇄** swaps them. **Compare** opens a GitHub or GitLab comparison of their latest deployed commits in a new tab. Both deployments must have commit-specific Git URLs from the same repository; repository-only or unsupported URLs disable comparison. Self-hosted GitLab and GitHub-style commit URLs are supported. No Git API calls or backend configuration are needed.
+
 Deployment tables and optional fields are created or migrated automatically in the existing SQLite database without changing test results. Older records have empty optional fields.
 
 ## API

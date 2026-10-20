@@ -36,6 +36,7 @@
             </dd>
           </div>
         </dl>
+        <DeploymentCompare :project="project.project" :environments="project.environments" />
       </article>
     </div>
   </template>
@@ -49,6 +50,7 @@ import RelativeDate from '../components/RelativeDate.vue'
 import DeploymentTabs from '../components/DeploymentTabs.vue'
 import EnvironmentActions from '../components/EnvironmentActions.vue'
 import VersionLink from '../components/VersionLink.vue'
+import DeploymentCompare from '../components/DeploymentCompare.vue'
 
 const overview = ref<DeploymentOverview>({ projects: [] })
 const loading = ref(true)
