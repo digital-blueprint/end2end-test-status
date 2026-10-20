@@ -16,8 +16,10 @@
   <main>
     <RouterView />
   </main>
-  <footer v-if="footerText" class="app-footer">
-    <span>{{ footerText }}</span>
+  <footer class="app-footer">
+    <span v-if="footerText">{{ footerText }}</span>
+    <a href="https://github.com/digital-blueprint/end2end-test-status" target="_blank" rel="noopener noreferrer"
+      aria-label="Source on GitHub (opens in a new tab)">Source on GitHub &#8599;</a>
   </footer>
 </template>
 
