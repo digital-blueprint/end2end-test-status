@@ -18,6 +18,7 @@ frontend/dist/
 *.sqlite
 *.db
 /data/
+/tmp/
 
 # Go binary
 e2e-status

@@ -185,11 +185,14 @@ URL-encode project and environment query values.
 
 ## Local development
 
+Run `just term` to open a [Zellij](https://zellij.dev) session (layout in `term.kdl`) with lazygit, the backend, the Vite dev server, and a pane that seeds demo data with `just seed`. Open http://localhost:5173 once everything is running.
+
 ### Backend
 
 ```sh
 # Requires Go 1.25+ and gcc (for CGO/sqlite3)
-API_TOKEN=dev PORT=8080 go run .
+DB_PATH=./tmp/db.sqlite API_TOKEN=dev-token PORT=8080 go run .
+# or: just backend
 ```
 
 The server expects `frontend/dist/` to exist. Build the frontend first, or run both together.
