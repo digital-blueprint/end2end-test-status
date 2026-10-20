@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildDeploymentCompareURL } from '../src/deploymentCompare.ts'
+import { buildDeploymentCompareURL, hasSameDeploymentRevision } from '../src/deploymentCompare.ts'
 
 test('GitHub compares the base deployed commit to the target deployed commit', () => {
   assert.equal(buildDeploymentCompareURL(
@@ -30,9 +30,29 @@ test('query strings, fragments, and trailing slashes are not included in compari
   ), 'https://github.com/team/app/compare/abc123...def456')
 })
 
-test('identical commits still link to a comparison showing no changes', () => {
+test('identical commits cannot be compared', () => {
   const url = 'https://github.com/team/app/commit/abc123'
-  assert.equal(buildDeploymentCompareURL(url, url), 'https://github.com/team/app/compare/abc123...abc123')
+  assert.equal(buildDeploymentCompareURL(url, url), null)
+  assert.equal(hasSameDeploymentRevision(url, url), true)
+})
+
+test('identical commits are recognized despite hash casing and URL decorations', () => {
+  for (const repository of ['https://github.com/team/app/commit/', 'https://gitlab.example.com/team/app/-/commit/']) {
+    const base = `${repository}abc123`
+    const target = `${repository}ABC123/?diff=split#files`
+    assert.equal(hasSameDeploymentRevision(base, target), true)
+    assert.equal(buildDeploymentCompareURL(base, target), null)
+  }
+})
+
+test('different commits, repositories, and unsupported URLs are not treated as identical', () => {
+  const base = 'https://github.com/team/app/commit/abc123'
+  for (const target of [
+    'https://github.com/team/app/commit/def456',
+    'https://github.com/team/other/commit/abc123',
+    'https://gitlab.example.com/team/app/-/commit/abc123',
+    '', 'not a URL',
+  ]) assert.equal(hasSameDeploymentRevision(base, target), false)
 })
 
 test('real dashboard GitHub and TU Graz GitLab URLs retain full deployed hashes', () => {
@@ -41,7 +61,8 @@ test('real dashboard GitHub and TU Graz GitLab URLs retain full deployed hashes'
     ['https://gitlab.tugraz.at/dbp/middleware/api', '/-/commit/', '/-/compare/', 'f9c4489925e07611c73e10006d7dad6bb0744b32'],
   ]) {
     const url = `${repository}${commitPath}${hash}`
-    assert.equal(buildDeploymentCompareURL(url, url), `${repository}${comparePath}${hash}...${hash}`)
+    assert.equal(buildDeploymentCompareURL(url, url), null)
+    assert.equal(buildDeploymentCompareURL(url, `${repository}${commitPath}def456`), `${repository}${comparePath}${hash}...def456`)
   }
 })
 

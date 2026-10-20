@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
 import type { Deployment } from '../types'
-import { buildDeploymentCompareURL } from '../deploymentCompare'
+import { buildDeploymentCompareURL, hasSameDeploymentRevision } from '../deploymentCompare'
 
 const props = defineProps<{ project: string; environments: Deployment[] }>()
 const id = useId()
@@ -52,14 +52,22 @@ watch(() => props.environments, environments => {
   }
 }, { immediate: true })
 
+const baseDeployment = computed(() => props.environments.find(deployment => deployment.environment === baseEnvironment.value))
+const targetDeployment = computed(() => props.environments.find(deployment => deployment.environment === targetEnvironment.value))
+const sameRevision = computed(() => {
+  const base = baseDeployment.value
+  const target = targetDeployment.value
+  return !!base && !!target && hasSameDeploymentRevision(base.git_url, target.git_url)
+})
 const compareURL = computed(() => {
   if (baseEnvironment.value === targetEnvironment.value) return null
-  const base = props.environments.find(deployment => deployment.environment === baseEnvironment.value)
-  const target = props.environments.find(deployment => deployment.environment === targetEnvironment.value)
+  const base = baseDeployment.value
+  const target = targetDeployment.value
   return base && target ? buildDeploymentCompareURL(base.git_url, target.git_url) : null
 })
 const hint = computed(() => {
   if (baseEnvironment.value === targetEnvironment.value) return 'Select two different environments.'
+  if (sameRevision.value) return 'Both environments have the same deployed version. No changes to compare.'
   if (!compareURL.value) return 'Requires GitHub or GitLab commit links from the same repository.'
   return `See what changed from ${baseEnvironment.value} (left) to ${targetEnvironment.value} (right), using their latest deployed versions. Use ⇄ to reverse the comparison.`
 })

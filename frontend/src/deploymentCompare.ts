@@ -19,17 +19,25 @@ function parseGitRevision(value: string): GitRevision | null {
     return {
       repository: `${url.origin}/${match[1]}`,
       provider: gitlab ? 'gitlab' : 'github',
-      revision: match[2],
+      revision: match[2].toLowerCase(),
     }
   } catch {
     return null
   }
 }
 
+export function hasSameDeploymentRevision(baseURL: string, targetURL: string): boolean {
+  const base = parseGitRevision(baseURL)
+  const target = parseGitRevision(targetURL)
+  return !!base && !!target && base.provider === target.provider
+    && base.repository === target.repository && base.revision === target.revision
+}
+
 export function buildDeploymentCompareURL(baseURL: string, targetURL: string): string | null {
   const base = parseGitRevision(baseURL)
   const target = parseGitRevision(targetURL)
   if (!base || !target || base.provider !== target.provider || base.repository !== target.repository) return null
+  if (base.revision === target.revision) return null
 
   const comparePath = base.provider === 'gitlab' ? '/-/compare/' : '/compare/'
   return `${base.repository}${comparePath}${base.revision}...${target.revision}`
