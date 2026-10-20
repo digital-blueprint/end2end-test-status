@@ -207,7 +207,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	for i, s := range summaries {
 		var latestStatus string
 		err := db.QueryRow(
-			`SELECT status FROM test_results WHERE project = ? ORDER BY created_at DESC LIMIT 1`,
+			`SELECT status FROM test_results WHERE project = ? ORDER BY created_at DESC, id DESC LIMIT 1`,
 			s.Project,
 		).Scan(&latestStatus)
 		if err == nil {
