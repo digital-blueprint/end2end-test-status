@@ -7,6 +7,27 @@ export interface ProjectSummary {
   last_run: string
 }
 
+export interface Deployment {
+  id: number
+  project: string
+  git_url: string
+  environment: string
+  deployed_at: string
+  version: string
+  deployment_url: string
+  version_created_at: string
+}
+
+export interface DeploymentOverview {
+  projects: { project: string; environments: Deployment[] }[]
+}
+
+export interface DeploymentHistory {
+  deployments: Deployment[]
+  total: number
+  environments: string[]
+}
+
 export interface TestResult {
   id: number
   project: string
@@ -41,14 +62,6 @@ export function statusClass(status: string): string {
   if (status === 'success') return 'success'
   if (status === 'failed') return 'failed'
   return 'other'
-}
-
-export function formatDate(dt: string): string {
-  if (!dt) return '—'
-  return new Date(dt).toLocaleString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export async function fetchJSON<T>(url: string): Promise<T> {

@@ -66,7 +66,7 @@
               <a v-if="r.job_url" :href="r.job_url" target="_blank" rel="noopener" class="ext">#{{ r.job_id }}</a>
               <span v-else>{{ r.job_id || '—' }}</span>
             </td>
-            <td>{{ formatDate(r.created_at) }}</td>
+            <td><RelativeDate :value="r.created_at" /></td>
           </tr>
         </tbody>
       </table>
@@ -77,7 +77,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchJSON, formatDate, statusClass, type TestResult } from '../types'
+import { fetchJSON, statusClass, type TestResult } from '../types'
+import RelativeDate from '../components/RelativeDate.vue'
 
 const route = useRoute()
 const router = useRouter()

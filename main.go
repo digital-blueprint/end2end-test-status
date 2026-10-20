@@ -85,12 +85,15 @@ func initDB() {
 	if _, err := db.Exec(createTable); err != nil {
 		log.Fatalf("failed to create table: %v", err)
 	}
+	if err := initDeployments(db); err != nil {
+		log.Fatalf("failed to create deployments table: %v", err)
+	}
 }
 
 func authMiddleware(pathPrefix string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Only protect the webhook endpoint
-		if r.URL.Path == pathPrefix+"/webhook" {
+		// Protect both webhook endpoints with the same token.
+		if r.URL.Path == pathPrefix+"/webhook" || r.URL.Path == pathPrefix+"/webhook/deployments" {
 			token := os.Getenv("API_TOKEN")
 			if token != "" {
 				authHeader := r.Header.Get("Authorization")
@@ -356,6 +359,9 @@ func main() {
 
 	// Webhook
 	appRouter.HandleFunc("/webhook", webhookHandler).Methods("POST")
+	appRouter.HandleFunc("/webhook/deployments", deploymentWebhookHandler).Methods("POST")
+	api.HandleFunc("/deployments/projects", deploymentProjectsHandler).Methods("GET")
+	api.HandleFunc("/deployments", deploymentsHandler).Methods("GET")
 
 	// Serve Vue SPA - strip the "frontend/dist" prefix from the embedded FS
 	distFS, err := fs.Sub(frontendFS, "frontend/dist")

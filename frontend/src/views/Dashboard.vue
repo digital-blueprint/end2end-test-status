@@ -1,5 +1,6 @@
 <template>
-  <h1>Dashboard</h1>
+  <h1>E2E Tests</h1>
+  <E2EDashboardTabs />
 
   <div v-if="loading" class="loading">Loading projects...</div>
   <div v-else-if="error" class="loading">{{ error }}</div>
@@ -39,7 +40,7 @@
           <span style="color:#f87171">Fail: {{ p.failed_runs }}</span>
         </div>
         <div style="margin-top:0.5rem;font-size:0.75rem;color:#475569">
-          Last run: {{ formatDate(p.last_run) }}
+          Last run: <RelativeDate :value="p.last_run" />
         </div>
       </RouterLink>
     </div>
@@ -49,7 +50,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import { fetchJSON, formatDate, statusClass, type ProjectSummary } from '../types'
+import E2EDashboardTabs from '../components/E2EDashboardTabs.vue'
+import { fetchJSON, statusClass, type ProjectSummary } from '../types'
+import RelativeDate from '../components/RelativeDate.vue'
 
 const projects = ref<ProjectSummary[]>([])
 const loading = ref(true)

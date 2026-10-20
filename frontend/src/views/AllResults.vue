@@ -1,5 +1,6 @@
 <template>
-  <h1>All Results</h1>
+  <h1>E2E Tests</h1>
+  <E2EDashboardTabs />
 
   <div class="filters">
     <div>
@@ -60,7 +61,7 @@
             <a v-if="r.job_url" :href="r.job_url" target="_blank" rel="noopener" class="ext">#{{ r.job_id }}</a>
             <span v-else>{{ r.job_id || '—' }}</span>
           </td>
-          <td>{{ formatDate(r.created_at) }}</td>
+          <td><RelativeDate :value="r.created_at" /></td>
         </tr>
       </tbody>
     </table>
@@ -70,7 +71,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import { fetchJSON, formatDate, statusClass, type TestResult } from '../types'
+import E2EDashboardTabs from '../components/E2EDashboardTabs.vue'
+import { fetchJSON, statusClass, type TestResult } from '../types'
+import RelativeDate from '../components/RelativeDate.vue'
 
 const results = ref<TestResult[]>([])
 const loading = ref(true)

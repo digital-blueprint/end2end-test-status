@@ -1,12 +1,12 @@
 # end2end-test-status
 
-A lightweight web service that receives end-to-end test results from GitLab CI via webhook, stores them in SQLite, and displays them through a Vue.js dashboard.
+A lightweight web service that receives end-to-end test results and successful deployment reports via webhooks, stores them in SQLite, and displays them through a Vue.js dashboard.
 
 ## How it works
 
-1. GitLab CI jobs run Playwright tests and POST results to `/webhook`
-2. The Go server authenticates the request, stores the result in SQLite
-3. The Vue.js UI (served by the same binary) shows a per-project dashboard and result history
+1. CI jobs POST test results to `/webhook` or successful deployments to `/webhook/deployments`.
+2. The Go server authenticates requests and stores reports in SQLite.
+3. The Vue.js UI, served by the same binary, shows separate E2E Tests and Deployments dashboards with project overviews and history.
 
 ## Docker
 
@@ -45,7 +45,7 @@ services:
 
 | Variable      | Default  | Description                                                                                                                    |
 | ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `API_TOKEN`   | _(none)_ | Bearer token required on `POST /webhook`. If unset, the webhook accepts all requests.                                          |
+| `API_TOKEN`   | _(none)_ | Bearer token required on both webhook endpoints. If unset, the webhooks accept all requests.                                  |
 | `PORT`        | `8080`   | Port the HTTP server listens on.                                                                                               |
 | `PATH_PREFIX` | _(none)_ | Optional URL path prefix for hosting under a sub-path (e.g. `/end2end-test-status`). Used by the Go server and the Vite build. |
 | `FOOTER_TEXT` | _(none)_ | Optional footer text shown in the UI.                                                                                          |
@@ -85,9 +85,69 @@ curl -s -X POST "https://your-host/webhook" \
 
 Returns `201 Created` on success.
 
+## Deployment webhook
+
+After a deployment succeeds, POST to `/webhook/deployments`. Include `PATH_PREFIX` in the URL if configured, and use the same API token as the test webhook.
+
+```sh
+curl --fail-with-body -X POST "https://your-host/webhook/deployments" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -d '{
+    "project": "my-app",
+    "git_url": "https://gitlab.example.com/team/my-app/-/commit/abc123",
+    "environment": "staging",
+    "version": "v1.2.3-4-gabc123",
+    "version_created_at": "2026-10-13T12:30:00Z",
+    "deployment_url": "https://staging.my-app.example.com/",
+    "deployed_at": "2026-10-20T12:30:00Z"
+  }'
+```
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `project` | yes | Deployment project name, independent of the E2E test project list |
+| `git_url` | yes | HTTP(S) Git URL without embedded credentials; a commit-specific link is recommended |
+| `environment` | yes | Freeform, case-sensitive name, e.g. `dev`, `demo`, `staging`, `prod`, or `preview/42` |
+| `deployed_at` | no | When the deployment happened, not when the report was received; defaults to the server's current time |
+| `version` | no | Freeform version label, e.g. `v1.2.3`, `v1.2.3-4-gabc123`, or a commit hash |
+| `version_created_at` | no | When the deployed version, tag, or revision was created; independent of `deployed_at` |
+| `deployment_url` | no | HTTP(S) URL of the running deployment, without embedded credentials |
+
+Both timestamps must use RFC3339 with a timezone, such as `2026-10-20T12:30:00Z`, and are stored in UTC. Project, environment, URL, and version values are trimmed. Each accepted report returns `201 Created` and adds a history entry; retries are not deduplicated. The latest deployment is selected by `deployed_at`, with insertion order breaking ties, so delayed reports do not replace newer deployments.
+
+### Reporting from GitLab CI
+
+Run this in the deployed checkout after a successful deployment. It requires `jq`, uses `git describe --tags --always` for the version label, and uses the commit's committer date for `version_created_at`. Omit `deployed_at` to use the report time.
+
+```sh
+jq -n \
+  --arg project "$NAME" \
+  --arg git_url "$CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA" \
+  --arg environment "$DEPLOY_ENV" \
+  --arg version "$(git describe --tags --always)" \
+  --arg version_created_at "$(git log -1 --format=%cI)" \
+  --arg deployment_url "$DEPLOY_URL" \
+  '{project: $project, git_url: $git_url, environment: $environment, version: $version, version_created_at: $version_created_at, deployment_url: $deployment_url}' | \
+  curl --fail-with-body -X POST "https://your-host/webhook/deployments" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $API_TOKEN" \
+    --data-binary @-
+```
+
+Fetch tags and sufficient history in CI for tag-based version labels; `--always` falls back to a commit hash. To report a tag's age instead of the commit's, use `git for-each-ref --format='%(creatordate:iso-strict)' refs/tags/v1.2.3`. This uses the tagger date for annotated tags and the commit date for lightweight tags. The server does not fetch Git metadata.
+
+### Dashboard
+
+Deployment projects are independent of E2E test projects and appear after their first report. **Overview** shows each project's deployed environments, newest first; **All Deployments** shows paginated history across projects. Project cards open project history, and environment names or **See deployments** open history filtered to that environment. Filters persist in the URL. **Open environment** opens the current environment URL, not a historical deployment.
+
+Versions link to their Git URLs and optionally show their creation age, e.g. `v1.2.3 (created 3 days ago)`. Dates update every 30 seconds; hover for exact local timestamps. Version tooltips also show the age at deployment, e.g. “Deployed 7 days after creation”.
+
+Deployment tables and optional fields are created or migrated automatically in the existing SQLite database without changing test results. Older records have empty optional fields.
+
 ## API
 
-All API endpoints return JSON.
+All API endpoints return JSON and are public. Include `PATH_PREFIX` in their URLs if configured.
 
 | Method | Path                              | Description                                          |
 | ------ | --------------------------------- | ---------------------------------------------------- |
@@ -95,6 +155,23 @@ All API endpoints return JSON.
 | `GET`  | `/api/projects/{project}/results` | Results for a single project                         |
 | `GET`  | `/api/results`                    | All results across all projects                      |
 | `GET`  | `/api/health`                     | Health check                                         |
+| `GET`  | `/api/deployments/projects`       | Projects with latest deployments per environment |
+| `GET`  | `/api/deployments`                | Paginated deployment history, optionally filtered by project |
+
+### Deployment endpoints
+
+`GET /api/deployments/projects` returns `{ "projects": [{ "project": "my-app", "environments": [...] }] }`. Each project contains its latest record per environment; only projects with deployment reports are included.
+
+`GET /api/deployments` returns `{ "deployments": [...], "total": 123, "environments": ["staging"] }`, newest first. Records contain `id` and the deployment payload fields; omitted optional fields are empty strings. `total` counts matching records before pagination. `environments` lists all environments for the selected project, or all reported environments when no project is selected, regardless of pagination or environment filtering.
+
+| Parameter | Description |
+| --------- | ----------- |
+| `project` | Optional, exact project name (omit for all projects; an explicitly empty value is invalid) |
+| `environment` | Optional, exact environment name |
+| `limit` | Page size, 1–200 (default 50) |
+| `offset` | Non-negative number of records to skip (default 0) |
+
+URL-encode project and environment query values.
 
 ### Query parameters for result endpoints
 
@@ -123,6 +200,7 @@ cd frontend
 npm install
 npm run build   # set PATH_PREFIX for sub-path hosting
 npm run dev   # Vite dev server on :5173, proxies /api and /webhook to :8080
+npm test      # Date-formatting tests (requires Node.js 22.6+)
 ```
 
 ### Build frontend for embedding

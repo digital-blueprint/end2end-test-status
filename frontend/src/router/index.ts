@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import ProjectView from '../views/ProjectView.vue'
 import AllResults from '../views/AllResults.vue'
+import DeploymentDashboard from '../views/DeploymentDashboard.vue'
+import DeploymentProjectView from '../views/DeploymentProjectView.vue'
+import AllDeployments from '../views/AllDeployments.vue'
 
 const normalizePathPrefix = (value: string | undefined) => {
   const trimmed = (value ?? '').trim()
@@ -22,5 +25,8 @@ export default createRouter({
     { path: '/', component: Dashboard },
     { path: '/project/:name', component: ProjectView },
     { path: '/results', component: AllResults },
+    { path: '/deployments', component: DeploymentDashboard },
+    { path: '/deployments/events', component: AllDeployments },
+    { path: '/deployments/project/:name', component: DeploymentProjectView },
   ],
 })

@@ -1,8 +1,8 @@
 <template>
   <nav>
-    <span class="brand">E2E Test Status</span>
-    <RouterLink to="/">Dashboard</RouterLink>
-    <RouterLink to="/results">All Results</RouterLink>
+    <span class="brand">Project Status</span>
+    <RouterLink to="/" :class="{ 'router-link-active': !route.path.startsWith('/deployments') }">E2E Tests</RouterLink>
+    <RouterLink to="/deployments" :class="{ 'router-link-active': route.path.startsWith('/deployments') }">Deployments</RouterLink>
     <button
       class="theme-toggle"
       type="button"
@@ -23,10 +23,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { footerText } from './types'
 
 type Theme = 'light' | 'dark'
+const route = useRoute()
 
 const theme = ref<Theme>((document.documentElement.dataset.theme as Theme) || 'dark')
 
