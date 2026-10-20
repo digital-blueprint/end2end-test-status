@@ -1,5 +1,5 @@
 <template>
-  <div class="filters">
+  <div v-if="project" class="filters">
     <label for="deployment-environment">Environment</label>
     <select id="deployment-environment" v-model="environment">
       <option value="">All environments</option>
@@ -49,7 +49,7 @@ const router = useRouter()
 const projectName = computed(() => props.project ?? '')
 const history = ref<DeploymentHistoryResponse>({ deployments: [], total: 0, environments: [] })
 const environment = computed({
-  get: () => typeof route.query.environment === 'string' ? route.query.environment : '',
+  get: () => props.project && typeof route.query.environment === 'string' ? route.query.environment : '',
   set: value => { void router.replace({ query: { ...route.query, environment: value || undefined } }) },
 })
 const offset = ref(0)
