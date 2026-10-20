@@ -236,6 +236,16 @@ tbody td.wrap { white-space: normal; }
   min-width: 120px;
 }
 
+.stat-box.clickable {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.stat-box.clickable:hover { border-color: var(--nav-accent); }
+.stat-box.clickable.active { border-color: var(--nav-accent); box-shadow: inset 0 0 0 1px var(--nav-accent); }
+
 .stat-box .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .stat-box .value { font-size: 1.5rem; font-weight: 700; color: var(--heading); margin-top: 0.1rem; }
 

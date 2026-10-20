@@ -9,23 +9,26 @@
   </div>
   <template v-else>
     <div class="stats">
-      <div class="stat-box">
+      <button type="button" class="stat-box clickable" :class="{ active: filter === 'all' }" :aria-pressed="filter === 'all'" @click="setFilter('all')">
         <div class="label">Projects</div>
         <div class="value">{{ projects.length }}</div>
-      </div>
-      <div class="stat-box">
+      </button>
+      <button type="button" class="stat-box clickable" :class="{ active: filter === 'passing' }" :aria-pressed="filter === 'passing'" @click="setFilter('passing')">
         <div class="label">Passing</div>
         <div class="value" style="color:#4ade80">{{ passingCount }}</div>
-      </div>
-      <div class="stat-box">
+      </button>
+      <button type="button" class="stat-box clickable" :class="{ active: filter === 'failing' }" :aria-pressed="filter === 'failing'" @click="setFilter('failing')">
         <div class="label">Failing</div>
         <div class="value" style="color:#f87171">{{ failingCount }}</div>
-      </div>
+      </button>
     </div>
 
-    <div class="grid">
+    <div v-if="filteredProjects.length === 0" class="loading">
+      No {{ filter }} projects.
+    </div>
+    <div v-else class="grid">
       <RouterLink
-        v-for="p in projects"
+        v-for="p in filteredProjects"
         :key="p.project"
         :to="`/project/${encodeURIComponent(p.project)}`"
         class="card"
@@ -49,17 +52,40 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import E2EDashboardTabs from '../components/E2EDashboardTabs.vue'
 import { fetchJSON, statusClass, type ProjectSummary } from '../types'
 import RelativeDate from '../components/RelativeDate.vue'
+
+type Filter = 'all' | 'passing' | 'failing'
+
+const route = useRoute()
+const router = useRouter()
 
 const projects = ref<ProjectSummary[]>([])
 const loading = ref(true)
 const error = ref('')
 
-const passingCount = computed(() => projects.value.filter(p => p.latest_status === 'success').length)
-const failingCount = computed(() => projects.value.filter(p => p.latest_status !== 'success').length)
+const isPassing = (p: ProjectSummary) => p.latest_status === 'success'
+
+const passingCount = computed(() => projects.value.filter(isPassing).length)
+const failingCount = computed(() => projects.value.filter(p => !isPassing(p)).length)
+
+const filter = computed<Filter>(() => {
+  const s = route.query.status
+  return s === 'passing' || s === 'failing' ? s : 'all'
+})
+
+const filteredProjects = computed(() => {
+  if (filter.value === 'passing') return projects.value.filter(isPassing)
+  if (filter.value === 'failing') return projects.value.filter(p => !isPassing(p))
+  return projects.value
+})
+
+function setFilter(f: Filter) {
+  const next = f === filter.value ? 'all' : f
+  router.replace({ query: { ...route.query, status: next === 'all' ? undefined : next } })
+}
 
 onMounted(async () => {
   try {
